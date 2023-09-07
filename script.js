@@ -3,7 +3,7 @@ const searchLink = document.getElementById('search-link');
 const favoritesLink = document.getElementById('favorites-link');
 const searchPage = document.getElementById('search-page');
 const favoritesPage = document.getElementById('favorites-page');
-// Adding click Event listner at search link button
+// Adding click Event listener to search link button
 searchLink.addEventListener('click', () => {
     searchPage.classList.add('active');
     favoritesPage.classList.remove('active');
@@ -19,7 +19,6 @@ const searchInput = document.getElementById('search-input');
 const searchResults = document.getElementById('search-results');
 const favoritesList = document.getElementById('favorites-list');
 const API_URL = 'https://www.themealdb.com/api/json/v1/1/search.php?s=';
-const SUGGESTION_URL = 'https://www.themealdb.com/api/json/v1/1/search.php?f=';
 
 // Load favorites from localStorage
 const storedFavorites = JSON.parse(localStorage.getItem('favorites')) || [];
@@ -27,65 +26,42 @@ storedFavorites.forEach((meal) => {
     addToFavorites(meal);
 });
 
-// Autocomplete suggestion
-searchInput.addEventListener('input', handleInput);
+// Add a submit button to trigger search results
+const searchButton = document.getElementById('search-button');
+searchButton.addEventListener('click', handleSearch);
 
+// Modify the handleInput function to clear search results on input
 function handleInput() {
-    const searchTerm = searchInput.value.trim();
-    if (searchTerm === '') {
-        searchResults.innerHTML = '';
-        return;
-    }
-
-    fetch(SUGGESTION_URL + searchTerm[0])
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then((data) => {
-            if (data.meals) {
-                displaySuggestionResults(data.meals);
-            } else {
-                searchResults.innerHTML = '';
-            }
-        })
-        .catch((error) => {
-            console.error('Error fetching data:', error);
-            searchResults.innerHTML = '';
-        });
-}
-//function to display the suggestion
-function displaySuggestionResults(meals) {
     searchResults.innerHTML = '';
-
-    meals.forEach((meal) => {
-        const suggestionItem = document.createElement('div');
-        suggestionItem.classList.add('suggestion-item');
-        suggestionItem.textContent = meal.strMeal;
-        suggestionItem.addEventListener('click', () => {
-            searchInput.value = meal.strMeal;
-            searchResults.innerHTML = '';
-            handleFormSubmit(event);
-        });
-
-        searchResults.appendChild(suggestionItem);
-    });
 }
-// Function to search form
+
+// Modify the searchForm event listener to prevent automatic submission on Enter
 const searchForm = document.getElementById('search-form');
-searchForm.addEventListener('submit', handleFormSubmit);
+searchForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+});
 
-function handleFormSubmit(event) {
-    event.preventDefault(); // Prevent the form from submitting traditionally
-
+// Add a click event listener to the submit button to trigger the search
+function handleSearch() {
     const searchTerm = searchInput.value.trim();
     if (searchTerm === '') {
         searchResults.innerHTML = '';
         return;
     }
-// fecth function used here to fetch from the API
+
+    // Call the handleFormSubmit function to fetch and display search results
+    handleFormSubmit();
+}
+
+// Function to search form
+function handleFormSubmit() {
+    const searchTerm = searchInput.value.trim();
+    if (searchTerm === '') {
+        searchResults.innerHTML = '';
+        return;
+    }
+
+    // Fetch function used here to fetch data from the API
     fetch(API_URL + searchTerm)
         .then((response) => {
             if (!response.ok) {
@@ -105,7 +81,8 @@ function handleFormSubmit(event) {
             searchResults.innerHTML = 'Error fetching data. Please try again later.';
         });
 }
-// Disp;ay function is used here to display the meal results
+
+// Display function is used here to display the meal results
 function displayMealResults(meals) {
     searchResults.innerHTML = '';
 
@@ -168,7 +145,6 @@ function displayMealResults(meals) {
         searchResults.appendChild(mealCard);
     });
 }
-
 function addToFavorites(meal) {
     const listItem = document.createElement('div');
     listItem.classList.add('favorite-item');
@@ -195,18 +171,13 @@ function addToFavorites(meal) {
     listItem.appendChild(strCategory);
     listItem.appendChild(removeFromFavoritesButton);
     favoritesList.appendChild(listItem);
-
-    // Store favorites in localStorage
-    const storedFavorites = JSON.parse(localStorage.getItem('favorites')) || [];
-    storedFavorites.push(meal);
-    localStorage.setItem('favorites', JSON.stringify(storedFavorites));
 }
 
 function removeFromFavorites(item) {
     favoritesList.removeChild(item);
+}
 
-    // Update favorites in localStorage
-    const storedFavorites = JSON.parse(localStorage.getItem('favorites')) || [];
-    const updatedFavorites = storedFavorites.filter((meal) => meal.strMeal !== item.firstChild.textContent);
-    localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+
+function removeFromFavorites(item) {
+    favoritesList.removeChild(item);
 }
